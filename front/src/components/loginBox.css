@@ -1,0 +1,92 @@
+.login-box {
+  opacity: 0.95;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.close-button {
+  color: inherit;
+  font-size: 14px;
+  width: inherit;
+  height: inherit;
+}
+
+.ant-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.weclome {
+  font-size: 1.5rem;
+  color: #111;
+}
+
+.sign-in {
+  font-size: 1.5rem;
+  color: #666;
+}
+
+p {
+  margin-bottom: 0;
+}
+
+
+.input-container {
+  display: flex;
+  align-items: center;
+}
+
+.input-container input {
+  transition: all 1.6s;
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: transparent;
+  background-image: none;
+  border: transparent 1px solid;
+  padding: 4px 11px 1px 0px;
+  width: 100%;
+  z-index: 100;
+  color: #111;
+}
+
+.input-container input:focus {
+  outline: none;
+}
+
+.line {
+  width: 1px;
+  height: 1px;
+  transition: all .6s;
+  /* margin-bottom: 2px; */
+  /* margin-top: 1px; */
+}
+
+.focus-line {
+  background-color: #40a9ff;
+  width: 100%;
+}
+
+.check {
+  visibility: hidden;
+  color: #1890ff;
+}
+
+.has-success .check {
+  visibility: inherit;
+}
+
+
+.sign-up-container {
+  font-size: 0.8rem;
+  color: #898989;
+}
+
+.sign-up-container button {
+  font-size: 0.8rem;
+  padding-left: 3px;
+  color: #222;
+}
+
+.submit-button {
+  padding-left: 0;
+  font-size: 1rem;
+}
