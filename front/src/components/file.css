@@ -1,0 +1,47 @@
+.file-container {
+  border: 1px solid #dadce0;
+  box-sizing: border-box;
+  align-items: initial;
+  border-radius: 6px;
+  /* max-width: 25%;
+  flex-grow: 25%; */
+  overflow: hidden;
+  background-color: #fff;
+  margin: 7px 12px;
+}
+
+.file-container .picture {
+  height: 130px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 50px;
+}
+
+.file-name {
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #474849;
+  font-size: 0.88rem;
+}
+
+.file-name .icon {
+  font-size: 28px;
+  padding-right: 10px;
+}
+
+.file-icon {
+  color: #607d8b;
+}
+
+.picture-icon {
+  color: #d32f2f;
+}
+
+.folder-icon {
+  color: #8f8f8f;
+}

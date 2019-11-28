@@ -1,28 +1,55 @@
 import React from 'react'
-// import Button from 'antd/es/button'
-// import { Link } from 'react-router-dom'
+import { Modal, Button } from 'antd'
 import './login.css'
 import LoginBox from '../components/loginBox'
 
-class Index extends React.Component {
-  constructor(props: React.Props<any>) {
-    super(props)
-    this.state = {
-    }
+interface IState {
+  showLogin: boolean,
+  background: number
+}
+
+class Login extends React.Component<any, IState> {
+  state = {
+    showLogin: false,
+    background: 0
   }
+
   UNSAFE_componentWillMount() {
+    // get random background
+    this.setState({
+      background: Math.floor(Math.random() * 2)
+    })
+  }
+
+  openModal = () => {
+    this.setState({
+      showLogin: true,
+    })
+  }
+  closeModal = () => {
+    this.setState({
+      showLogin: false,
+    })
   }
   render() {
-    return (<div className="index">
+    return (<div className={"login bg" + this.state.background }>
         <main>
-          <LoginBox></LoginBox>
-          {/* <Link to='/test'>
-            <Button ghost className="login-button">Sign In</Button>
-          </Link> */}
+          <Modal
+            title="Clouds"
+            visible={this.state.showLogin}
+            className="modal"
+            onCancel={this.closeModal}
+            maskClosable={false}
+          >
+            <LoginBox/>
+          </Modal>
+          <p className="cloud">Clouds</p>
+          <p className="service">一站式云端存储服务</p>
+          <Button ghost className="login-button" onClick={this.openModal}>Sign In</Button>
         </main>
       </div>
     )
   }
 }
 
-export default Index
+export default Login
