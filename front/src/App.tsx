@@ -1,7 +1,7 @@
 import React from 'react'
 import './App.css'
 import { BrowserRouter as Router, Route } from 'react-router-dom'
-import loadable from './utils/loadable'
+import loadable from './lib/loadable'
 
 const Login = loadable(() => import('./pages/login'))
 const Disk = loadable(() => import('./pages/disk'))

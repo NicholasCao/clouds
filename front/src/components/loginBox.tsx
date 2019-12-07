@@ -1,101 +1,91 @@
-import React from 'react'
+import React, { useState, useRef } from 'react'
 import { Form, Button, Icon, Carousel } from 'antd'
 import { withRouter, RouteComponentProps } from 'react-router-dom'
 import { FormComponentProps } from 'antd/lib/form/Form'
 import './loginBox.css'
 import Register from './register'
 
-class LoginBox extends React.Component<FormComponentProps & RouteComponentProps> {
-  state = { 
-    visible: false,
-    focus: ''
-  }
+const LoginBox: React.FC<FormComponentProps & RouteComponentProps> = (props) => {
+  const [focus, setFocus] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const carousel = useRef<Carousel>(null)
 
-  handleSubmit = (e:any) => {
+  const login = (e:any) => {
     e.preventDefault()
-    this.props.history.push('/disk')
-    // this.props.form.validateFields((err, values) => {
-    //   if (!err) {
-    //     console.log('Received values of form: ', values)
-    //   }
-    // })
+    props.history.push('/disk', { username })
+    // login
   }
-  handleFocus = (key: string) => {
-    this.setState({
-      focus: key
-    })
+  const handleFocus = (key: string) => {
+    setFocus(key)
   }
 
-  carousel: any = {}
-  bindCarousel = (ref:any) => {
-    this.carousel = ref
-  }
-  register = (e:any) => {
+  const register = (e:any) => {
     e.preventDefault()
-    this.carousel.next()
+    if (carousel.current) carousel.current.next()
   }
 
-  render() {
-    const { getFieldDecorator } = this.props.form
-    return (
-      <Carousel ref={this.bindCarousel} dots={false}>
-        <Form onSubmit={this.handleSubmit}>
-          <div style={{ marginBottom: '30px' }}>
-            <p className="weclome">Weclome back,</p>
-            <p className="sign-in">sign in to continue to Clouds.</p>
-          </div>
-          <Form.Item>
-            {getFieldDecorator('username', {
-              rules: [{ required: true, message: 'Please input your username!' }],
-            })(
-              <div>
-                <div className="input-container">
-                  <input 
-                    placeholder="Username"
-                    onFocus={() => this.handleFocus('username')}
-                    onBlur={() => this.setState({ focus: '' })}
-                  />
-                  <Icon type="check" className="check" />
-                </div>
-                <div className={this.state.focus === 'username' ? "focus-line line" : 'line'}/>
+  const { getFieldDecorator } = props.form
+  return (
+    <Carousel ref={carousel} dots={false}>
+      <Form onSubmit={login}>
+        <div style={{ marginBottom: '30px' }}>
+          <p className="weclome">Weclome back,</p>
+          <p className="sign-in">sign in to continue to Clouds.</p>
+        </div>
+        <Form.Item>
+          {getFieldDecorator('username', {
+            rules: [{ required: true, message: 'Please input your username!' }],
+          })(
+            <div>
+              <div className="input-container">
+                <input 
+                  placeholder="Username"
+                  onFocus={() => handleFocus('username')}
+                  onBlur={() => setFocus('')}
+                  onChange={(e:any) => {setUsername(e.target.value)}}
+                />
+                <Icon type="check" className="check" />
               </div>
-            )}
-          </Form.Item>
-          <Form.Item>
-            {getFieldDecorator('password', {
-              rules: [{ required: true, message: 'Please input your Password!' }],
-            })(
-              <div>
-                <div className="input-container">
-                  <input 
-                    placeholder="Password"
-                    type="password"
-                    onFocus={() => this.handleFocus('password')}
-                    onBlur={() => this.setState({ focus: '' })}
-                  />
-                  <Icon type="check" className="check" />
-                </div>
-                <div className={this.state.focus === 'password' ? "focus-line line" : 'line'}/>
+              <div className={focus === 'username' ? "focus-line line" : 'line'}/>
+            </div>
+          )}
+        </Form.Item>
+        <Form.Item>
+          {getFieldDecorator('password', {
+            rules: [{ required: true, message: 'Please input your Password!' }],
+          })(
+            <div>
+              <div className="input-container">
+                <input 
+                  placeholder="Password"
+                  type="password"
+                  onFocus={() => handleFocus('password')}
+                  onBlur={() => setFocus('')}
+                  onChange={(e:any) => {setPassword(e.target.value)}}
+                />
+                <Icon type="check" className="check" />
               </div>
-            )}
-          </Form.Item>
-          <Form.Item>
-            <Button type="link" htmlType="submit" className="submit-button">
-              Login
+              <div className={focus === 'password' ? "focus-line line" : 'line'}/>
+            </div>
+          )}
+        </Form.Item>
+        <Form.Item>
+          <Button type="link" htmlType="submit" className="submit-button">
+            Login
+          </Button>
+          <br/>
+          <p className="sign-up-container">
+            Don't have an account?
+            <Button type="link" onClick={register}>
+              Sign up
             </Button>
-            <br/>
-            <p className="sign-up-container">
-              Don't have an account?
-              <Button type="link" onClick={this.register}>
-                Sign up
-              </Button>
-            </p>
-          </Form.Item>
-        </Form>
-        <Register back={() => this.carousel.prev()} />
-        </Carousel>
-    )
-  }
+          </p>
+        </Form.Item>
+      </Form>
+      <Register back={() => { if (carousel.current) carousel.current.prev() }} />
+    </Carousel>
+  )
 }
 
 export default Form.create<FormComponentProps>()(withRouter(LoginBox))

@@ -1,55 +1,42 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Modal, Button } from 'antd'
 import './login.css'
 import LoginBox from '../components/loginBox'
 
-interface IState {
-  showLogin: boolean,
-  background: number
-}
+const Login: React.FC = () => {
+  const [showLogin, setShowLogin] = useState(false)
+  const [background, setBackGround] = useState(0)
 
-class Login extends React.Component<any, IState> {
-  state = {
-    showLogin: false,
-    background: 0
-  }
+  useEffect(() => {
+    setBackGround(Math.floor(Math.random() * 2))
+  }, [])
 
-  UNSAFE_componentWillMount() {
-    // get random background
-    this.setState({
-      background: Math.floor(Math.random() * 2)
-    })
+  const openModal = () => {
+    setShowLogin(true)
   }
 
-  openModal = () => {
-    this.setState({
-      showLogin: true,
-    })
+  const closeModal = () => {
+    setShowLogin(false)
   }
-  closeModal = () => {
-    this.setState({
-      showLogin: false,
-    })
-  }
-  render() {
-    return (<div className={"login bg" + this.state.background }>
-        <main>
-          <Modal
-            title="Clouds"
-            visible={this.state.showLogin}
-            className="modal"
-            onCancel={this.closeModal}
-            maskClosable={false}
-          >
-            <LoginBox/>
-          </Modal>
-          <p className="cloud">Clouds</p>
-          <p className="service">一站式云端存储服务</p>
-          <Button ghost className="login-button" onClick={this.openModal}>Sign In</Button>
-        </main>
-      </div>
-    )
-  }
+
+  return (
+    <div className={"login bg" + background }>
+      <main>
+        <Modal
+          title="Clouds"
+          visible={showLogin}
+          className="modal"
+          onCancel={closeModal}
+          maskClosable={false}
+        >
+          <LoginBox/>
+        </Modal>
+        <p className="cloud">Clouds</p>
+        <p className="service">一站式云端存储服务</p>
+        <Button ghost className="login-button" onClick={openModal}>Sign In</Button>
+      </main>
+    </div>
+  )
 }
 
 export default Login

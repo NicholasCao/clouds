@@ -4,6 +4,7 @@ import './file.css'
 interface Iprops {
   name: string,
   type: string,
+  onClick: () => void
 }
 
 const FileIcon: React.FC = () => (
@@ -16,7 +17,7 @@ const FolderIcon: React.FC = () => (
   <svg className="folder-icon icon" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="presentation"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"></path><path fill="none" d="M0 0h24v24H0z"></path></svg>
 )
 
-const RenderIcon: React.FC<string> = (type: string) => {
+const RenderIcon: React.FC<string> = (type) => {
   if (type === 'folder') {
     return (<FolderIcon/>)
   }
@@ -27,8 +28,8 @@ const RenderIcon: React.FC<string> = (type: string) => {
   }
 }
 
-const file: React.FC<Iprops> = (props: Iprops) => (
-  <div className="file-container">
+const File: React.FC<Iprops> = (props) => (
+  <div className="file-container" onClick={props.onClick}>
     <div className="picture">
       { RenderIcon(props.type) }
     </div>
@@ -39,4 +40,4 @@ const file: React.FC<Iprops> = (props: Iprops) => (
   </div>
 )
 
-export default file
+export default File

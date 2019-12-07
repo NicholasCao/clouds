@@ -1,39 +1,36 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Form, Button, Icon } from 'antd'
 import { FormComponentProps } from 'antd/lib/form/Form'
 import './register.css'
 
 interface RegisterProps {
-  back: () => any
+  back: () => void
 }
 
-class Register extends React.Component<RegisterProps & FormComponentProps> {
-  state = { 
-    focus: '',
-    confirmDirty: false
-  }
+const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
+  const [focus, setFocus] = useState('')
+  const [confirmDirty, setConfirmDirty] = useState(false)
 
-  register = (e:any) => {
+  const register = (e:any) => {
     e.preventDefault()
-    this.props.form.validateFields((err, values) => {
+    props.form.validateFields((err, values) => {
       if (!err) {
         console.log('Received values of form: ', values)
       }
     })
   }
 
-  handleFocus = (key: string) => {
-    this.setState({
-      focus: key
-    })
+  const handleFocus = (key: string) => {
+    setFocus(key)
   }
-  handleConfirmBlur = (e:any) => {
+  const handleConfirmBlur = (e:any) => {
     const { value } = e.target
-    this.setState({ confirmDirty: this.state.confirmDirty || !!value, focus: '' })
+    setConfirmDirty(confirmDirty || !!value)
+    setFocus('')
   }
 
-  compareToFirstPassword = (rule: any, value: any, callback: any) => {
-    const { form } = this.props
+  const compareToFirstPassword = (rule: any, value: any, callback: any) => {
+    const { form } = props
     if (value && value !== form.getFieldValue('password')) {
       callback('Two passwords that you enter is inconsistent!')
     } else {
@@ -41,120 +38,118 @@ class Register extends React.Component<RegisterProps & FormComponentProps> {
     }
   }
 
-  validateToNextPassword = (rule: any, value: any, callback: any) => {
-    const { form } = this.props
-    if (value && this.state.confirmDirty) {
+  const validateToNextPassword = (rule: any, value: any, callback: any) => {
+    const { form } = props
+    if (value && confirmDirty) {
       form.validateFields(['confirm'], { force: true })
     }
     callback()
   }
 
-  render() {
-    const { getFieldDecorator } = this.props.form
-    return (
-      <Form onSubmit={this.register}>
-        <div style={{ marginBottom: '30px' }}>
-          <p className="sign-up">Sign up for Clouds</p>
-        </div>
-        <Form.Item>
-          {getFieldDecorator('username', {
-            rules: [{ required: true, message: 'Please input your username!' }],
-          })(
-            <div>
-              <div className="input-container">
-                <input
-                  placeholder="Username"
-                  onFocus={() => this.handleFocus('username')}
-                  onBlur={() => this.setState({ focus: '' })}
-                />
-                <Icon type="check" className="check" />
-              </div>
-              <div className={this.state.focus === 'username' ? "focus-line line" : 'line'}/>
+  const { getFieldDecorator } = props.form
+  return (
+    <Form onSubmit={register}>
+      <div style={{ marginBottom: '30px' }}>
+        <p className="sign-up">Sign up for Clouds</p>
+      </div>
+      <Form.Item>
+        {getFieldDecorator('username', {
+          rules: [{ required: true, message: 'Please input your username!' }],
+        })(
+          <div>
+            <div className="input-container">
+              <input
+                placeholder="Username"
+                onFocus={() => handleFocus('username')}
+                onBlur={() => setFocus('')}
+              />
+              <Icon type="check" className="check" />
             </div>
-          )}
-        </Form.Item>
-        <Form.Item>
-          {getFieldDecorator('password', {
-            rules: [
-              {
-                required: true,
-                message: 'Please input your password!',
-              },
-              {
-                validator: this.validateToNextPassword,
-              },
-            ],
-          })(
-            <div>
-              <div className="input-container">
-                <input
-                  placeholder="Password"
-                  type="password"
-                  onFocus={() => this.handleFocus('password')}
-                  onBlur={() => this.setState({ focus: '' })}
-                />
-                <Icon type="check" className="check" />
-              </div>
-              <div className={this.state.focus === 'password' ? "focus-line line" : 'line'}/>
-            </div>
-          )}
-        </Form.Item>
-        <Form.Item>
-          {getFieldDecorator('confirm', {
-            rules: [
-              { 
-                required: true,
-                message: 'Please confirm your password!'
-              },
-              {
-                validator: this.compareToFirstPassword,
-              },
-            ],
-          })(
-            <div>
-              <div className="input-container">
-                <input
-                  placeholder="Confirm Password"
-                  type="password"
-                  onFocus={() => this.handleFocus('confirm')}
-                  onBlur={this.handleConfirmBlur}
-                />
-                <Icon type="check" className="check" />
-              </div>
-              <div className={this.state.focus === 'confirm' ? "focus-line line" : 'line'}/>
-            </div>
-          )}
-        </Form.Item>
-        <Form.Item>
-          {getFieldDecorator('invitationCode', {
-            rules: [{ required: true, message: 'Please input your invitation code!' }],
-          })(
-            <div>
-              <div className="input-container">
-                <input
-                  placeholder="Invitation Code"
-                  onFocus={() => this.handleFocus('invitationCode')}
-                  onBlur={() => this.setState({ focus: '' })}
-                />
-                <Icon type="check" className="check" />
-              </div>
-              <div className={this.state.focus === 'invitationCode' ? "focus-line line" : 'line'}/>
-            </div>
-          )}
-        </Form.Item>
-        <Form.Item>
-          <div className="buttons-container">
-          <Button type="link" htmlType="submit">
-            Register
-          </Button>
-          <Button type="link" onClick={this.props.back}>
-            Back
-          </Button>
+            <div className={focus === 'username' ? "focus-line line" : 'line'}/>
           </div>
-        </Form.Item>
-      </Form>
-    )
-  }
+        )}
+      </Form.Item>
+      <Form.Item>
+        {getFieldDecorator('password', {
+          rules: [
+            {
+              required: true,
+              message: 'Please input your password!',
+            },
+            {
+              validator: validateToNextPassword,
+            },
+          ],
+        })(
+          <div>
+            <div className="input-container">
+              <input
+                placeholder="Password"
+                type="password"
+                onFocus={() => handleFocus('password')}
+                onBlur={() => setFocus('')}
+              />
+              <Icon type="check" className="check" />
+            </div>
+            <div className={focus === 'password' ? "focus-line line" : 'line'}/>
+          </div>
+        )}
+      </Form.Item>
+      <Form.Item>
+        {getFieldDecorator('confirm', {
+          rules: [
+            { 
+              required: true,
+              message: 'Please confirm your password!'
+            },
+            {
+              validator: compareToFirstPassword,
+            },
+          ],
+        })(
+          <div>
+            <div className="input-container">
+              <input
+                placeholder="Confirm Password"
+                type="password"
+                onFocus={() => handleFocus('confirm')}
+                onBlur={handleConfirmBlur}
+              />
+              <Icon type="check" className="check" />
+            </div>
+            <div className={focus === 'confirm' ? "focus-line line" : 'line'}/>
+          </div>
+        )}
+      </Form.Item>
+      <Form.Item>
+        {getFieldDecorator('invitationCode', {
+          rules: [{ required: true, message: 'Please input your invitation code!' }],
+        })(
+          <div>
+            <div className="input-container">
+              <input
+                placeholder="Invitation Code"
+                onFocus={() => handleFocus('invitationCode')}
+                onBlur={() => setFocus('')}
+              />
+              <Icon type="check" className="check" />
+            </div>
+            <div className={focus === 'invitationCode' ? "focus-line line" : 'line'}/>
+          </div>
+        )}
+      </Form.Item>
+      <Form.Item>
+        <div className="buttons-container">
+        <Button type="link" htmlType="submit">
+          Register
+        </Button>
+        <Button type="link" onClick={props.back}>
+          Back
+        </Button>
+        </div>
+      </Form.Item>
+    </Form>
+  )
 }
 
 export default Form.create<RegisterProps & FormComponentProps>()(Register)
