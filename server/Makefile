@@ -1,8 +1,8 @@
 GO ?= go
 
 run:
-	$(GO) build ./app.go
-	./app.exe
+	$(GO) build .
+	./clouds.exe
 
 fmt: 
 	$(GO) fmt ./...

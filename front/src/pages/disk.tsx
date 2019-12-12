@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Icon, Button, Popover, Input, Upload, message } from 'antd'
 import { withRouter, RouteComponentProps } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
+
 import './disk.css'
+
 import File from '../components/file'
 import axios from '../lib/axios'
 
@@ -41,7 +43,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
   const [path, setPath] = useState(['/', 'aa', 'abc'])
 
   useEffect(() => {
-    // setFiles(Files)
+    setFiles(Files)
   }, [])
 
   const select = (selectType: SelectType) => {

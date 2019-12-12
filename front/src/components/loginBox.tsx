@@ -2,20 +2,31 @@ import React, { useState, useRef } from 'react'
 import { Form, Button, Icon, Carousel } from 'antd'
 import { withRouter, RouteComponentProps } from 'react-router-dom'
 import { FormComponentProps } from 'antd/lib/form/Form'
+
 import './loginBox.css'
+
+import axios from '../lib/axios'
+import { rsaEncrypt } from '../lib/utils'
 import Register from './register'
 
 const LoginBox: React.FC<FormComponentProps & RouteComponentProps> = (props) => {
   const [focus, setFocus] = useState('')
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const carousel = useRef<Carousel>(null)
 
   const login = (e:any) => {
     e.preventDefault()
-    props.history.push('/disk', { username })
-    // login
+    props.form.validateFields((err, values) => {
+      if (!err) {
+        axios.post('/user/login', {
+          username: values.username,
+          password: rsaEncrypt(values.password)
+        }).then(res => { 
+          props.history.push('/disk', { username: values.username }) 
+        })
+      }
+    })
   }
+
   const handleFocus = (key: string) => {
     setFocus(key)
   }
@@ -35,7 +46,10 @@ const LoginBox: React.FC<FormComponentProps & RouteComponentProps> = (props) => 
         </div>
         <Form.Item>
           {getFieldDecorator('username', {
-            rules: [{ required: true, message: 'Please input your username!' }],
+            rules: [
+              { required: true, message: 'Please input your username!' },
+              { min: 3, max: 15, message: 'Username must be between 3 and 15 characters.' }
+            ]
           })(
             <div>
               <div className="input-container">
@@ -43,7 +57,6 @@ const LoginBox: React.FC<FormComponentProps & RouteComponentProps> = (props) => 
                   placeholder="Username"
                   onFocus={() => handleFocus('username')}
                   onBlur={() => setFocus('')}
-                  onChange={(e:any) => {setUsername(e.target.value)}}
                 />
                 <Icon type="check" className="check" />
               </div>
@@ -53,7 +66,10 @@ const LoginBox: React.FC<FormComponentProps & RouteComponentProps> = (props) => 
         </Form.Item>
         <Form.Item>
           {getFieldDecorator('password', {
-            rules: [{ required: true, message: 'Please input your Password!' }],
+            rules: [
+              { required: true, message: 'Please input your Password!' },
+              { min: 3, max: 15, message: 'Password must be between 3 and 15 characters.' }
+            ]
           })(
             <div>
               <div className="input-container">
@@ -62,7 +78,7 @@ const LoginBox: React.FC<FormComponentProps & RouteComponentProps> = (props) => 
                   type="password"
                   onFocus={() => handleFocus('password')}
                   onBlur={() => setFocus('')}
-                  onChange={(e:any) => {setPassword(e.target.value)}}
+                  // onChange={(e:any) => {setPassword(e.target.value)}}
                 />
                 <Icon type="check" className="check" />
               </div>

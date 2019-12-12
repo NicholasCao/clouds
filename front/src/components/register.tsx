@@ -1,7 +1,11 @@
 import React, { useState } from 'react'
 import { Form, Button, Icon } from 'antd'
 import { FormComponentProps } from 'antd/lib/form/Form'
+
 import './register.css'
+
+import axios from '../lib/axios'
+import { rsaEncrypt } from '../lib/utils'
 
 interface RegisterProps {
   back: () => void
@@ -15,7 +19,10 @@ const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
     e.preventDefault()
     props.form.validateFields((err, values) => {
       if (!err) {
-        console.log('Received values of form: ', values)
+        axios.post('/user/register', {
+          username: values.username,
+          password: rsaEncrypt(values.password)
+        })
       }
     })
   }
@@ -29,7 +36,19 @@ const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
     setFocus('')
   }
 
+  const validateNoWhitespace = (rule: any, value: any, callback: any) => {
+    if (value && value.indexOf(' ') > -1) {
+      callback(`Username shouldn't contain whitespace.`)
+    } else {
+      callback()
+    }
+  }
+
   const compareToFirstPassword = (rule: any, value: any, callback: any) => {
+    if (value && value.indexOf(' ') > -1) {
+      callback(`Password shouldn't contain whitespace.`)
+    }
+
     const { form } = props
     if (value && value !== form.getFieldValue('password')) {
       callback('Two passwords that you enter is inconsistent!')
@@ -39,6 +58,10 @@ const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
   }
 
   const validateToNextPassword = (rule: any, value: any, callback: any) => {
+    if (value && value.indexOf(' ') > -1) {
+      callback(`Password shouldn't contain whitespace.`)
+    }
+
     const { form } = props
     if (value && confirmDirty) {
       form.validateFields(['confirm'], { force: true })
@@ -49,12 +72,16 @@ const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
   const { getFieldDecorator } = props.form
   return (
     <Form onSubmit={register}>
-      <div style={{ marginBottom: '30px' }}>
+      <div style={{ marginBottom: '50px' }}>
         <p className="sign-up">Sign up for Clouds</p>
       </div>
       <Form.Item>
         {getFieldDecorator('username', {
-          rules: [{ required: true, message: 'Please input your username!' }],
+          rules: [
+            { required: true, message: 'Please input your username!' },
+            { min: 3, max: 15, message: 'Username must be between 3 and 15 characters.' },
+            { validator: validateNoWhitespace }
+          ],
         })(
           <div>
             <div className="input-container">
@@ -75,6 +102,11 @@ const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
             {
               required: true,
               message: 'Please input your password!',
+            },
+            {
+              min: 3,
+              max: 15,
+              message: 'Password must be between 3 and 15 characters.'
             },
             {
               validator: validateToNextPassword,
@@ -118,23 +150,6 @@ const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
               <Icon type="check" className="check" />
             </div>
             <div className={focus === 'confirm' ? "focus-line line" : 'line'}/>
-          </div>
-        )}
-      </Form.Item>
-      <Form.Item>
-        {getFieldDecorator('invitationCode', {
-          rules: [{ required: true, message: 'Please input your invitation code!' }],
-        })(
-          <div>
-            <div className="input-container">
-              <input
-                placeholder="Invitation Code"
-                onFocus={() => handleFocus('invitationCode')}
-                onBlur={() => setFocus('')}
-              />
-              <Icon type="check" className="check" />
-            </div>
-            <div className={focus === 'invitationCode' ? "focus-line line" : 'line'}/>
           </div>
         )}
       </Form.Item>

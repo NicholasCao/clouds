@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Modal, Button } from 'antd'
+
 import './login.css'
+
 import LoginBox from '../components/loginBox'
 
 const Login: React.FC = () => {
@@ -32,7 +34,7 @@ const Login: React.FC = () => {
           <LoginBox/>
         </Modal>
         <p className="cloud">Clouds</p>
-        <p className="service">一站式云端存储服务</p>
+        <p className="service">Cloud Storage Service</p>
         <Button ghost className="login-button" onClick={openModal}>Sign In</Button>
       </main>
     </div>
