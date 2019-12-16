@@ -7,6 +7,7 @@ import './disk.css'
 
 import File from '../components/file'
 import axios from '../lib/axios'
+import { formatDate } from '../lib/utils'
 
 const IconFont = Icon.createFromIconfontCN({
   scriptUrl: '//at.alicdn.com/t/font_1528394_vajadebven8.js',
@@ -61,15 +62,14 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
       let formData = new FormData()
       formData.append('file', file)
       formData.append('user', username)
-      formData.append('path', path.join('/').slice(1))
-      axios.post('/upload', formData, {
+      formData.append('path', path.length > 2 ? path.join('/').slice(1) : path.join())
+      formData.append('lastModified', formatDate(new Date(file.lastModified)))
+      axios.post('/file/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       }).then(res => {
         message.success(`${file.name} file uploaded successfully.`)
-      }).catch(err => {
-        message.error(`${file.name} file upload failed.`)
       })
     })
   }, [username, path])
@@ -78,7 +78,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
 
   const uploadProps = {
     name: 'file',
-    action: '/api/upload',
+    action: '/api/file/upload',
     headers: {
       authorization: 'authorization-text',
     },
@@ -88,21 +88,19 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
       // }
       if (info.file.status === 'done') {
         message.success(`${info.file.name} file uploaded successfully.`)
-      } else if (info.file.status === 'error') {
-        message.error(`${info.file.name} file upload failed.`)
       }
     },
     data(file: any) {
       return {
-        path: path.join('/').slice(1),
-        user: username
+        path: path.length > 2 ? path.join('/').slice(1) : path.join(),
+        user: username,
+        lastModified: formatDate(new Date(file.lastModified))
       }
     },
     showUploadList: false
   }
   const changePath = (pathItem: string) => {
     setPath(path.slice(0, path.indexOf(pathItem) + 1))
-    // console.log(path)
   }
 
   const clickFile = (file:File) => {

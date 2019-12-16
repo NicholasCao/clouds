@@ -22,7 +22,7 @@ type user struct {
 
 type response struct {
 	Msg   string `json:"msg"`
-	Token string `json:"token"`
+	Token string `json:"token,omitempty"`
 }
 
 // Login handles user login.
