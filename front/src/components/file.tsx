@@ -35,7 +35,7 @@ const File: React.FC<Iprops> = (props) => (
     </div>
     <div className="file-name">
       { RenderIcon(props.type) }
-      { props.name }
+      { props.name.length > 8 ? props.name.slice(0, 6) + '...' : props.name }
     </div>
   </div>
 )

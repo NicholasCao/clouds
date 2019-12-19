@@ -14,12 +14,11 @@ axios.interceptors.response.use(
 
   // failed
   err => {
-    console.error(err.response.data)
     let { msg } = err.response.data
     if (msg) {
       message.error(`${msg}.`, 5)
     } else {
-      message.error('unknown error.', 5)
+      message.error(err.response.data ? `request failed: ${err.response.data}` : 'unknown error.', 5)
     }
 
     throw err

@@ -17,7 +17,7 @@ const LoginBox: React.FC<FormComponentProps & RouteComponentProps> = (props) => 
     e.preventDefault()
     props.form.validateFields((err, values) => {
       if (!err) {
-        axios.post('/user/login', {
+        axios.post('/users/login', {
           username: values.username,
           password: rsaEncrypt(values.password)
         }).then(res => { 

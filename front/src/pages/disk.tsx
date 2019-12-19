@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Icon, Button, Popover, Input, Upload, message } from 'antd'
+import { Icon, Button, Popover, Input, Upload, Modal, message } from 'antd'
 import { withRouter, RouteComponentProps } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 
@@ -41,11 +41,33 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
   const { username } = props.location.state
   const [selectType, setSelectType] = useState('all')
   const [files, setFiles] = useState<File[]>([])
-  const [path, setPath] = useState(['/', 'aa', 'abc'])
+  const [path, setPath] = useState(['/'])
+  const [visible, setVisible] = useState(false)
+  const [folderName, setFolderName] = useState('')
+
+  const getFiles = () => {
+    axios.get("/files", {
+      params: {
+        user: username,
+        path: path.length > 2 ? path.join('/').slice(1) : path.join()
+      }
+    }).then(res => {
+      setFiles(res.data.result)
+      // setFiles(Files)
+    })
+  }
+
+  // useEffect(() => {
+  //   // getFiles()
+  // }, [])
 
   useEffect(() => {
-    setFiles(Files)
-  }, [])
+    getFiles()
+  }, [path])
+
+  // useEffect(() => {
+    
+  // }, [selectType])
 
   const select = (selectType: SelectType) => {
     setSelectType(selectType)
@@ -64,12 +86,13 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
       formData.append('user', username)
       formData.append('path', path.length > 2 ? path.join('/').slice(1) : path.join())
       formData.append('lastModified', formatDate(new Date(file.lastModified)))
-      axios.post('/file/upload', formData, {
+      axios.post('/files/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       }).then(res => {
         message.success(`${file.name} file uploaded successfully.`)
+        getFiles()
       })
     })
   }, [username, path])
@@ -78,7 +101,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
 
   const uploadProps = {
     name: 'file',
-    action: '/api/file/upload',
+    action: '/api/files/upload',
     headers: {
       authorization: 'authorization-text',
     },
@@ -88,6 +111,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
       // }
       if (info.file.status === 'done') {
         message.success(`${info.file.name} file uploaded successfully.`)
+        getFiles()
       }
     },
     data(file: any) {
@@ -108,8 +132,37 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
       let newPath = [...path]
       newPath.push(file.name)
       setPath(newPath)
+    } else {
+      // download
+      let link = document.createElement('a')
+      link.style.display = 'none'
+      link.href = `/api/files/download?user=${username}&path=${path.length > 2 ? path.join('/').slice(1) : path.join()}&name=${file.name}`
+      link.setAttribute('download', file.name)
+      link.click()
     }
-    // console.log(path)
+  }
+
+  const showModal = () => {
+    setVisible(true)
+  }
+  const hideModal = () => {
+    setVisible(false)
+  }
+
+  const createFolder = () => {
+    if (folderName) {
+      axios.post("/files/folder", {
+        name: folderName,
+        user: username,
+        path: path.length > 2 ? path.join('/').slice(1) : path.join()
+      }).then(res => {
+        message.success(`folder ${folderName} created successfully.`)
+        getFiles()
+      })
+      hideModal()
+    } else {
+      message.error('please input folder name.')
+    }
   }
 
   return (
@@ -130,6 +183,19 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
         </Popover>
       </header>
       <main>
+        <Modal
+          title="New Folder"
+          visible={visible}
+          onOk={createFolder}
+          onCancel={hideModal}
+          okText="Create"
+          cancelText="Cancel"
+          closable={false}
+          width={300}
+        >
+          <p>Folder Name:</p>
+          <Input onChange={(e) => setFolderName(e.target.value)}/>
+        </Modal>
         <div className="sidebar-container">
           <div className="sidebar">
             <div className="search-container">
@@ -166,7 +232,9 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
                   Upload
                 </Button>
               </Upload>
-              <Button><IconFont type="iconiccreatenewfolder"/>Create</Button>
+              <Button onClick={showModal}>
+                <IconFont type="iconiccreatenewfolder"/>Create
+              </Button>
             </div>
           </div>
         </div>

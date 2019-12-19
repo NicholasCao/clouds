@@ -19,7 +19,7 @@ const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
     e.preventDefault()
     props.form.validateFields((err, values) => {
       if (!err) {
-        axios.post('/user/register', {
+        axios.post('/users/register', {
           username: values.username,
           password: rsaEncrypt(values.password)
         })

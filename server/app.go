@@ -17,10 +17,16 @@ func main() {
 	r.GET("/api", func(c *goa.Context) {
 		c.String("Hello Goa!")
 	})
-	r.POST("/api/user/register", user.Register)
-	r.POST("/api/user/login", user.Login)
-	r.POST("/api/file/upload", file.Upload)
-	r.DELETE("/api/file/upload", file.Delete)
+
+	r.POST("/api/users/register", user.Register)
+	r.POST("/api/users/login", user.Login)
+
+	r.GET("/api/files", file.Get)
+	r.POST("/api/files/upload", file.Upload)
+	r.POST("/api/files/folder", file.NewFolder)
+	r.DELETE("/api/files/:id", file.Delete)
+	r.GET("/api/files/download", file.Download)
+
 	app.Use(r.Routes())
 	log.Fatal(app.Listen(":3001"))
 }
