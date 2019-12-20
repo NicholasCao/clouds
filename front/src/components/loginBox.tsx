@@ -20,8 +20,13 @@ const LoginBox: React.FC<FormComponentProps & RouteComponentProps> = (props) => 
         axios.post('/users/login', {
           username: values.username,
           password: rsaEncrypt(values.password)
-        }).then(res => { 
-          props.history.push('/disk', { username: values.username }) 
+        }).then(res => {
+          if (localStorage) {
+            localStorage.setItem("clouds-token", res.data.token)
+          }
+          props.history.push('/disk', {
+            username: values.username
+          })
         })
       }
     })

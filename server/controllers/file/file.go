@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"clouds/db"
 	"github.com/goa-go/goa"
 	"gopkg.in/mgo.v2/bson"
+
+	"clouds/db"
 )
 
 type file struct {
@@ -153,7 +154,25 @@ func NewFolder(c *goa.Context) {
 
 // Delete a file.
 func Delete(c *goa.Context) {
-	c.String("delete")
+	id := c.Param("id")
+	user := c.Query("user")
+	path := c.Query("path")
+	name := c.Query("name")
+
+	err := db.Remove("file", bson.M{
+		"_id": bson.ObjectIdHex(id),
+	})
+	if err != nil {
+		c.Status(500)
+		c.JSON(goa.M{
+			"msg": "file delete failed " + err.Error(),
+		})
+	} else {
+		err = os.Remove("store/" + getFileName(user, path, name))
+		c.JSON(goa.M{
+			"msg": "success",
+		})
+	}
 }
 
 func getFileName(user, path, filename string) string {

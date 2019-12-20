@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { withRouter, RouteComponentProps } from 'react-router-dom'
 import { Form, Button, Icon } from 'antd'
 import { FormComponentProps } from 'antd/lib/form/Form'
 
@@ -11,7 +12,7 @@ interface RegisterProps {
   back: () => void
 }
 
-const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
+const Register: React.FC<RegisterProps & FormComponentProps & RouteComponentProps> = (props) => {
   const [focus, setFocus] = useState('')
   const [confirmDirty, setConfirmDirty] = useState(false)
 
@@ -22,6 +23,13 @@ const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
         axios.post('/users/register', {
           username: values.username,
           password: rsaEncrypt(values.password)
+        }).then(res => {
+          if (localStorage) {
+            localStorage.setItem("clouds-token", res.data.token)
+          }
+          props.history.push('/disk', {
+            username: values.username
+          })
         })
       }
     })
@@ -167,4 +175,4 @@ const Register: React.FC<RegisterProps & FormComponentProps> = (props) => {
   )
 }
 
-export default Form.create<RegisterProps & FormComponentProps>()(Register)
+export default Form.create<RegisterProps & FormComponentProps>()(withRouter(Register))

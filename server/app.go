@@ -4,8 +4,10 @@ import (
 	"log"
 
 	"github.com/goa-go/goa"
+	"github.com/goa-go/jwt"
 	"github.com/goa-go/router"
 
+	"clouds/config"
 	"clouds/controllers/file"
 	"clouds/controllers/user"
 )
@@ -13,10 +15,6 @@ import (
 func main() {
 	app := goa.New()
 	r := router.New()
-
-	r.GET("/api", func(c *goa.Context) {
-		c.String("Hello Goa!")
-	})
 
 	r.POST("/api/users/register", user.Register)
 	r.POST("/api/users/login", user.Login)
@@ -27,6 +25,10 @@ func main() {
 	r.DELETE("/api/files/:id", file.Delete)
 	r.GET("/api/files/download", file.Download)
 
+	app.Use(jwt.New(jwt.Options{
+		Secret: config.TokenSecret,
+		Unless: []string{"/api/users/login", "/api/users/register"},
+	}))
 	app.Use(r.Routes())
 	log.Fatal(app.Listen(":3001"))
 }

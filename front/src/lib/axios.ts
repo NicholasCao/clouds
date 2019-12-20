@@ -5,6 +5,13 @@ const axios = Axios.create({
   baseURL: '/api'
 })
 
+axios.interceptors.request.use(config => {
+  if (localStorage) {
+    config.headers.Authorization = localStorage.getItem("clouds-token")
+  }
+  return config
+})
+
 axios.interceptors.response.use(
   // success
   response => {
