@@ -23,12 +23,6 @@ type file struct {
 }
 
 type fileDetail struct {
-	Type         string `json:"type" bson:"type"`
-	Size         string `json:"size" bson:"size"`
-	LastModified string `json:"last_modified" bson:"last_modified"`
-}
-
-type f struct {
 	ID           bson.ObjectId `json:"_id,omitempty" bson:"_id,omitempty"`
 	User         string        `json:"user" bson:"user"`
 	Path         string        `json:"path" bson:"path"`
@@ -42,7 +36,7 @@ type f struct {
 func Get(c *goa.Context) {
 	user := c.Query("user")
 	path := c.Query("path")
-	result := &[]f{}
+	result := &[]fileDetail{}
 	err := db.FindAll("file", bson.M{
 		"user": user,
 		"path": path,
@@ -61,58 +55,61 @@ func Get(c *goa.Context) {
 }
 
 // Upload a file.
-// If file already exists, Upload replaces it.
+// If file already exists, respond a error.
 func Upload(c *goa.Context) {
-	uploadFile, header, err := c.FormFile("file")
+	uploadFile, header, _ := c.FormFile("file")
 	user := c.PostForm("user")
 	path := c.PostForm("path")
 	lastModified := c.PostForm("lastModified")
 
-	if err != nil {
-		c.Status(500)
-		c.JSON(goa.M{
-			"msg": "upload failed: " + err.Error(),
-		})
-	}
-	dst, err := os.Create("store/" + getFileName(user, path, header.Filename))
-	if err != nil {
-		c.Status(500)
-		c.JSON(goa.M{
-			"msg": "upload failed: " + err.Error(),
-		})
-	} else {
-		_, err = io.Copy(dst, uploadFile)
+	result := &fileDetail{}
+	err := db.FindOne("file", bson.M{
+		"user": user,
+		"path": path,
+		"name": header.Filename,
+	}, nil, result)
+	if err != nil && err.Error() == "not found" {
+		dst, err := os.Create("store/" + getFileName(user, path, header.Filename))
 		if err != nil {
 			c.Status(500)
 			c.JSON(goa.M{
 				"msg": "upload failed: " + err.Error(),
 			})
 		} else {
-			// change lastModified
-			mtime, _ := time.ParseInLocation("2006-01-02 15:04:05", lastModified, time.Local)
-			os.Chtimes("store/"+getFileName(user, path, header.Filename), time.Now(), mtime)
-			f := file{
-				User: user,
-				Path: path,
-				Name: header.Filename,
-			}
-			fd := fileDetail{
-				Type:         getFileType(header.Filename),
-				Size:         getFileSize(header.Size),
-				LastModified: lastModified,
-			}
-			err = db.Upsert("file", f, bson.M{
-				"$set": fd,
-			})
+			_, err = io.Copy(dst, uploadFile)
 			if err != nil {
+				c.Status(500)
 				c.JSON(goa.M{
 					"msg": "upload failed: " + err.Error(),
 				})
+			} else {
+				// change lastModified
+				mtime, _ := time.ParseInLocation("2006-01-02 15:04:05", lastModified, time.Local)
+				os.Chtimes("store/"+getFileName(user, path, header.Filename), time.Now(), mtime)
+				f := fileDetail{
+					User:         user,
+					Path:         path,
+					Name:         header.Filename,
+					Type:         getFileType(header.Filename),
+					Size:         getFileSize(header.Size),
+					LastModified: lastModified,
+				}
+				err = db.Insert("file", f)
+				if err != nil {
+					c.JSON(goa.M{
+						"msg": "upload failed: " + err.Error(),
+					})
+				}
+				c.JSON(goa.M{
+					"msg": "success",
+				})
 			}
-			c.JSON(goa.M{
-				"msg": "success",
-			})
 		}
+	} else {
+		c.Status(500)
+		c.JSON(goa.M{
+			"msg": "File has the same name as an existing file or folder",
+		})
 	}
 }
 
@@ -134,20 +131,34 @@ func NewFolder(c *goa.Context) {
 	folder := &file{}
 	c.ParseJSON(folder)
 
-	err := db.Insert("file", f{
-		User: folder.User,
-		Path: folder.Path,
-		Name: folder.Name,
-		Type: "folder",
-	})
-	if err != nil {
+	result := &fileDetail{}
+	err := db.FindOne("file", bson.M{
+		"user": folder.User,
+		"path": folder.Path,
+		"name": folder.Name,
+	}, nil, result)
+
+	if err != nil && err.Error() == "not found" {
+		err = db.Insert("file", fileDetail{
+			User: folder.User,
+			Path: folder.Path,
+			Name: folder.Name,
+			Type: "folder",
+		})
+		if err != nil {
+			c.Status(500)
+			c.JSON(goa.M{
+				"msg": "create folder failed: " + err.Error(),
+			})
+		} else {
+			c.JSON(goa.M{
+				"msg": "success",
+			})
+		}
+	} else {
 		c.Status(500)
 		c.JSON(goa.M{
-			"msg": "create folder failed: " + err.Error(),
-		})
-	} else {
-		c.JSON(goa.M{
-			"msg": "success",
+			"msg": "Folder has the same name as an existing file or folder",
 		})
 	}
 }

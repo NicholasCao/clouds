@@ -22,6 +22,10 @@ axios.interceptors.response.use(
   // failed
   err => {
     let { msg } = err.response.data
+    if (msg && msg === 'check token failed') {
+      throw err
+    }
+
     if (msg) {
       message.error(`${msg}.`, 5)
     } else {

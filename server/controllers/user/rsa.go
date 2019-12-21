@@ -11,19 +11,6 @@ import (
 	"github.com/goa-go/goa/utils"
 )
 
-// func rsaEncrypt(publicKey []byte, origData []byte) ([]byte, error) {
-// 	block, _ := pem.Decode(publicKey)
-// 	if block == nil {
-// 		return nil, errors.New("public key error")
-// 	}
-// 	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	pub := pubInterface.(*rsa.PublicKey)
-// 	return rsa.EncryptPKCS1v15(rand.Reader, pub, origData)
-// }
-
 func rsaDecrypt(privateKey string, ciphertext string) (string, error) {
 	block, _ := pem.Decode(utils.Str2Bytes(privateKey))
 	if block == nil {

@@ -6,7 +6,7 @@ import { ContextMenu, MenuItem, ContextMenuTrigger } from "react-contextmenu"
 
 import './disk.css'
 
-import File from '../components/file'
+import FileItem from '../components/file'
 import axios from '../lib/axios'
 import { formatDate } from '../lib/utils'
 
@@ -27,36 +27,58 @@ function collect(props: any) {
 }
 
 const Disk: React.FC<RouteComponentProps> = (props) => {
-  const { username } = props.location.state
+  const [username, setUsername] = useState('')
   const [selectType, setSelectType] = useState('all')
   const [files, setFiles] = useState<File[]>([])
   const [path, setPath] = useState(['/'])
   const [visible, setVisible] = useState(false)
   const [folderName, setFolderName] = useState('')
 
-  const getFiles = () => {
+  const getFiles = useCallback(() => {
     axios.get("/files", {
       params: {
         user: username,
         path: path.length > 1 ? path.join('/').slice(1) : path.join()
       }
     }).then(res => {
-      setFiles(res.data.result)
-      // setFiles(Files)
-    })
-  }
+      let folders: File[] = []
+      let files: File[] = []
+      res.data.result.forEach((file: File) => {
+        if (file.type === 'folder') {
+          folders.push(file)
+        }
+      })
+      res.data.result.forEach((file: File) => {
+        if (file.type !== 'folder') {
+          files.push(file)
+        }
+      })
 
-  // useEffect(() => {
-  //   // getFiles()
-  // }, [])
+      folders.sort((a, b) => {
+        return a.name.toLocaleLowerCase() > b.name.toLocaleLowerCase() ? 1 : -1
+      })
+      files.sort((a, b) => {
+        return a.name.toLocaleLowerCase() > b.name.toLocaleLowerCase() ? 1 : -1
+      })
+
+      setFiles([...folders, ...files])
+    })
+  }, [username, path])
+
+  useEffect(() => {
+    axios.post("/users/checkToken", {
+      token: localStorage.getItem("clouds-token")
+    }).then(res => {
+      setUsername(res.data.username)
+    }).catch(err => {
+      props.history.push('/')
+    })
+
+  }, [props.history])
 
   useEffect(() => {
     getFiles()
-  }, [path])
-
-  // useEffect(() => {
-    
-  // }, [selectType])
+  }, [path, getFiles])
 
   const select = (selectType: SelectType) => {
     setSelectType(selectType)
@@ -83,7 +105,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
         getFiles()
       })
     })
-  }, [username, path])
+  }, [username, path, getFiles])
 
   const { getRootProps, getInputProps } = useDropzone({onDrop, noClick: true, noKeyboard: true})
 
@@ -222,7 +244,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
           width={300}
         >
           <p>Folder Name:</p>
-          <Input onChange={(e) => setFolderName(e.target.value)}/>
+          <Input onChange={(e) => setFolderName(e.target.value)} onPressEnter={(e) => {e.preventDefault();createFolder();}} />
         </Modal>
         <div className="sidebar-container">
           <div className="sidebar">
@@ -294,7 +316,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
               ) : files.map((file, index) => (
                 <React.Fragment key = { index }>
                   <ContextMenuTrigger id={file._id} collect={collect} attributes={attributes}>
-                    <File name={ file.name } type={ file.type } onClick={() => {clickFile(file)}} />
+                    <FileItem name={ file.name } type={ file.type } onClick={() => {clickFile(file)}} />
                   </ContextMenuTrigger>
                   <ContextMenu id={file._id}>
                     {

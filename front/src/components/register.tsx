@@ -27,9 +27,7 @@ const Register: React.FC<RegisterProps & FormComponentProps & RouteComponentProp
           if (localStorage) {
             localStorage.setItem("clouds-token", res.data.token)
           }
-          props.history.push('/disk', {
-            username: values.username
-          })
+          props.history.push('/disk')
         })
       }
     })

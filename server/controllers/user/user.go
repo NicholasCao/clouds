@@ -54,7 +54,7 @@ func Login(c *goa.Context) {
 		if psw == u.Password {
 			c.JSON(response{
 				Msg:   "success",
-				Token: getToken(),
+				Token: getToken(loginUser.Username),
 			})
 		} else {
 			c.Status(401)
@@ -70,7 +70,7 @@ func Register(c *goa.Context) {
 	registerUser := &user{}
 	u := &user{}
 	c.ParseJSON(registerUser)
-	err := db.FindOne("user", bson.M{"username": registerUser.Username}, bson.M{}, u)
+	err := db.FindOne("user", bson.M{"username": registerUser.Username}, nil, u)
 
 	if err != nil {
 		if err.Error() == "not found" {
@@ -85,7 +85,7 @@ func Register(c *goa.Context) {
 			db.Insert("user", registerUser)
 			c.JSON(response{
 				Msg:   "success",
-				Token: getToken(),
+				Token: getToken(registerUser.Username),
 			})
 		} else {
 			c.Status(500)
@@ -102,10 +102,43 @@ func Register(c *goa.Context) {
 	}
 }
 
-func getToken() string {
+type tokenRequest struct {
+	Token string `json:"token"`
+}
+
+type tokenResponse struct {
+	Msg      string `json:"msg"`
+	Username string `json:"username,omitempty"`
+}
+
+// CheckToken make sure that user has passed authentication.
+// And respond username to client.
+func CheckToken(c *goa.Context) {
+	t := &tokenRequest{}
+	c.ParseJSON(t)
+
+	token, err := jwt.Parse(t.Token, func(_ *jwt.Token) (interface{}, error) {
+		return utils.Str2Bytes(config.TokenSecret), nil
+	})
+
+	if token != nil && token.Valid && err == nil {
+		c.JSON(goa.M{
+			"msg":      "success",
+			"username": token.Claims.(jwt.MapClaims)["username"].(string),
+		})
+	} else {
+		c.Status(401)
+		c.JSON(goa.M{
+			"msg": "check token failed",
+		})
+	}
+}
+
+func getToken(username string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"iat": time.Now().Unix(),
-		"exp": time.Now().AddDate(0, 0, 7).Unix(),
+		"iat":      time.Now().Local().Unix(),
+		"exp":      time.Now().Local().AddDate(0, 0, 7).Unix(),
+		"username": username,
 	})
 	tokenString, _ := token.SignedString(utils.Str2Bytes(config.TokenSecret))
 	return tokenString

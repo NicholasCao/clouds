@@ -18,6 +18,7 @@ func main() {
 
 	r.POST("/api/users/register", user.Register)
 	r.POST("/api/users/login", user.Login)
+	r.POST("/api/users/checkToken", user.CheckToken)
 
 	r.GET("/api/files", file.Get)
 	r.POST("/api/files/upload", file.Upload)
@@ -27,7 +28,7 @@ func main() {
 
 	app.Use(jwt.New(jwt.Options{
 		Secret: config.TokenSecret,
-		Unless: []string{"/api/users/login", "/api/users/register"},
+		Unless: []string{"/api/users/login", "/api/users/register", "/api/users/checkToken"},
 	}))
 	app.Use(r.Routes())
 	log.Fatal(app.Listen(":3001"))

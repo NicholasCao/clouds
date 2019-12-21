@@ -24,9 +24,7 @@ const LoginBox: React.FC<FormComponentProps & RouteComponentProps> = (props) => 
           if (localStorage) {
             localStorage.setItem("clouds-token", res.data.token)
           }
-          props.history.push('/disk', {
-            username: values.username
-          })
+          props.history.push('/disk')
         })
       }
     })
