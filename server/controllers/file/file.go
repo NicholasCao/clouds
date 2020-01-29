@@ -36,10 +36,63 @@ type fileDetail struct {
 func Get(c *goa.Context) {
 	user := c.Query("user")
 	path := c.Query("path")
+	fileType := c.Query("type")
+	keyword := c.Query("keyword")
+
+	// search
+	if keyword != "" {
+		search(c, user, path, keyword)
+		return
+	}
+
+	if fileType != "" && fileType != "all" {
+		result := &[]fileDetail{}
+		err := db.FindAll("file", bson.M{
+			"user": user,
+			"type": fileType,
+		}, nil, result)
+		if err != nil {
+			c.Status(500)
+			c.JSON(goa.M{
+				"msg": "get files failed: " + err.Error(),
+			})
+		} else {
+			c.JSON(goa.M{
+				"msg":    "success",
+				"result": result,
+			})
+		}
+	} else {
+		result := &[]fileDetail{}
+		err := db.FindAll("file", bson.M{
+			"user": user,
+			"path": path,
+		}, nil, result)
+		if err != nil {
+			c.Status(500)
+			c.JSON(goa.M{
+				"msg": "get files failed: " + err.Error(),
+			})
+		} else {
+			c.JSON(goa.M{
+				"msg":    "success",
+				"result": result,
+			})
+		}
+	}
+}
+
+// Search files.
+func search(c *goa.Context, user, path, keyword string) {
 	result := &[]fileDetail{}
 	err := db.FindAll("file", bson.M{
 		"user": user,
 		"path": path,
+		"name": bson.M{
+			"$regex": bson.RegEx{
+				Pattern: keyword,
+			},
+		},
 	}, nil, result)
 	if err != nil {
 		c.Status(500)

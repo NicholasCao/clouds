@@ -17,10 +17,11 @@ const IconFont = Icon.createFromIconfontCN({
 interface File {
   _id: string,
   name: string,
-  type: 'folder' | 'doc' | 'picture' | 'video' | 'music'
+  type: 'folder' | 'docs' | 'picture' | 'video' | 'music'
 }
 
-type SelectType = 'all' | 'doc' | 'picture' | 'video' | 'music'
+// 'search' mean that is showing the search result
+type SelectType = 'all' | 'docs' | 'picture' | 'video' | 'music' | 'search'
 
 function collect(props: any) {
   return { id: props.id }
@@ -29,16 +30,19 @@ function collect(props: any) {
 const Disk: React.FC<RouteComponentProps> = (props) => {
   const [username, setUsername] = useState('')
   const [selectType, setSelectType] = useState('all')
+  const [keyword, setKeyword] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [path, setPath] = useState(['/'])
   const [visible, setVisible] = useState(false)
   const [folderName, setFolderName] = useState('')
 
-  const getFiles = useCallback(() => {
+  const getFiles = useCallback((type: string = '', keyword: string = '') => {
     axios.get("/files", {
       params: {
         user: username,
-        path: path.length > 1 ? path.join('/').slice(1) : path.join()
+        path: path.length > 1 ? path.join('/').slice(1) : path.join(),
+        type,
+        keyword
       }
     }).then(res => {
       let folders: File[] = []
@@ -80,6 +84,11 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
     getFiles()
   }, [path, getFiles])
 
+  useEffect(() => {
+    if (selectType !== 'search') getFiles(selectType)
+    // else getFiles('', keyword)
+  }, [selectType, getFiles])
+
   const select = (selectType: SelectType) => {
     setSelectType(selectType)
   }
@@ -102,10 +111,10 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
         }
       }).then(res => {
         message.success(`${file.name} file uploaded successfully.`)
-        getFiles()
+        setSelectType('all')
       })
     })
-  }, [username, path, getFiles])
+  }, [username, path])
 
   const { getRootProps, getInputProps } = useDropzone({onDrop, noClick: true, noKeyboard: true})
 
@@ -121,7 +130,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
       // }
       if (info.file.status === 'done') {
         message.success(`${info.file.name} file uploaded successfully.`)
-        getFiles()
+        setSelectType('all')
       }
     },
     data(file: any) {
@@ -142,7 +151,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
         name: file.name
       }
     }).then(res => {
-      getFiles()
+      getFiles(selectType)
       message.success(`${file.name} file deleted successfully.`)
     })
   }
@@ -195,6 +204,11 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
     setVisible(false)
   }
 
+  const search = () => {
+    setSelectType('search')
+    getFiles('', keyword)
+  }
+
   const createFolder = () => {
     if (folderName) {
       axios.post("/files/folder", {
@@ -203,7 +217,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
         path: path.length > 1 ? path.join('/').slice(1) : path.join()
       }).then(res => {
         message.success(`folder ${folderName} created successfully.`)
-        getFiles()
+        setSelectType('all')
       })
       hideModal()
     } else {
@@ -244,14 +258,17 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
           width={300}
         >
           <p>Folder Name:</p>
-          <Input onChange={(e) => setFolderName(e.target.value)} onPressEnter={(e) => {e.preventDefault();createFolder();}} />
+          <Input onChange={e => setFolderName(e.target.value)} onPressEnter={e => {e.preventDefault(); createFolder();}} />
         </Modal>
         <div className="sidebar-container">
           <div className="sidebar">
             <div className="search-container">
               <Input
+                value={keyword}
+                onChange={e => setKeyword(e.target.value)}
                 placeholder="Search"
                 prefix={<Icon type="search" style={{ color: 'rgba(0,0,0,.25)' }} />}
+                onPressEnter={e => {e.preventDefault(); search();}}
               />
             </div>
             <ul>
@@ -259,7 +276,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
                 <IconFont type="iconfiles" />
                 all
               </li>
-              <li onClick={() => select('doc')} className={selectType === 'doc' ? 'selected': ''}>
+              <li onClick={() => select('docs')} className={selectType === 'docs' ? 'selected': ''}>
                 <IconFont type="icondocs2" />
                 docs
               </li>
@@ -291,14 +308,18 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
         <div className="files-container">
           <div className="path-bar">
             {
-              path.map((pathItem, index) => (
-                <React.Fragment key={ index }>
-                  <Button type="link" className="path" onClick={() => { changePath(pathItem) }}>
-                    { pathItem }
-                  </Button>
-                  { index === path.length - 1 ? '' : <Icon type="right" /> }
-                </React.Fragment>
-              ))
+              selectType === 'all' ?
+                path.map((pathItem, index) => (
+                  <React.Fragment key={ index }>
+                    <Button type="link" className="path" onClick={() => { changePath(pathItem) }}>
+                      { pathItem }
+                    </Button>
+                    { index === path.length - 1 ? '' : <Icon type="right" /> }
+                  </React.Fragment>
+                )) :
+                (<Button type="link" className="path">
+                  Result
+                </Button>)
             }
           </div>
           <div className="files" {...getRootProps()}>
