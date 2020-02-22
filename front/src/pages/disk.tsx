@@ -10,6 +10,7 @@ import FileItem from '../components/file'
 import axios from '../lib/axios'
 import { formatDate } from '../lib/utils'
 
+// use IconFont
 const IconFont = Icon.createFromIconfontCN({
   scriptUrl: '//at.alicdn.com/t/font_1528394_vajadebven8.js',
 })
@@ -17,7 +18,8 @@ const IconFont = Icon.createFromIconfontCN({
 interface File {
   _id: string,
   name: string,
-  type: 'folder' | 'docs' | 'picture' | 'video' | 'music'
+  type: 'folder' | 'docs' | 'picture' | 'video' | 'music',
+  path: string
 }
 
 // 'search' mean that is showing the search result
@@ -34,13 +36,20 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
   const [files, setFiles] = useState<File[]>([])
   const [path, setPath] = useState(['/'])
   const [visible, setVisible] = useState(false)
+  const [moveFileVisable, setMoveFileVisable] = useState(false)
   const [folderName, setFolderName] = useState('')
+  const [moveFilePath, setMoveFilePath] = useState('/')
+  // destinations for moving files
+  const [destinations, setDestinations] = useState<string[]>([])
+  // real destination
+  const [moveTo, setMoveTo] = useState('')
+  const [movingFile, setMovingFile] = useState<File>()
 
-  const getFiles = useCallback((type: string = '', keyword: string = '') => {
+  const getFiles = useCallback((type: string = 'all', keyword: string = '') => {
     axios.get("/files", {
       params: {
         user: username,
-        path: path.length > 1 ? path.join('/').slice(1) : path.join(),
+        path: type === 'all' ? path.length > 1 ? path.join('/').slice(1) : path.join() : '',
         type,
         keyword
       }
@@ -86,7 +95,6 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
 
   useEffect(() => {
     if (selectType !== 'search') getFiles(selectType)
-    // else getFiles('', keyword)
   }, [selectType, getFiles])
 
   const select = (selectType: SelectType) => {
@@ -111,10 +119,11 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
         }
       }).then(res => {
         message.success(`${file.name} file uploaded successfully.`)
-        setSelectType('all')
+        if (selectType !== 'all') select('all')
+        else getFiles()
       })
     })
-  }, [username, path])
+  }, [username, path, selectType, getFiles])
 
   const { getRootProps, getInputProps } = useDropzone({onDrop, noClick: true, noKeyboard: true})
 
@@ -125,12 +134,10 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
       authorization: 'authorization-text',
     },
     onChange(info: any) {
-      // if (info.file.status !== 'uploading') {
-      //   console.log(info.file, info.fileList)
-      // }
       if (info.file.status === 'done') {
         message.success(`${info.file.name} file uploaded successfully.`)
-        setSelectType('all')
+        if (selectType !== 'all') select('all')
+        else getFiles()
       }
     },
     data(file: any) {
@@ -160,6 +167,8 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
     let file = files.find(file => file._id === data.id)
     if ((data.action === 'Download' || data.action === 'Enter') && file) {
       clickFile(file)
+    } else if (data.action === 'Move' && file) {
+      moveFile(file)
     } else if (data.action === 'Delete' && file) {
       deleteFile(file)
     }
@@ -169,7 +178,7 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
     setPath(path.slice(0, path.indexOf(pathItem) + 1))
   }
 
-  const clickFile = (file:File) => {
+  const clickFile = (file: File) => {
     if (file.type === 'folder') {
       let newPath = [...path]
       newPath.push(file.name)
@@ -197,6 +206,68 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
     }
   }
 
+  const getDestinations = useCallback(() => {
+    axios.get("/files", {
+      params: {
+        user: username,
+        path: moveFilePath,
+        type: 'folder'
+      }
+    }).then(res => {
+      let result: string[]= res.data.result.map((folder: File) => folder.name)
+      result.sort((a, b) => {
+        return a.toLocaleLowerCase() > b.toLocaleLowerCase() ? 1 : -1
+      })
+      if (moveFilePath === '/') result.unshift('/')
+      setDestinations(result)
+    })
+  }, [username, moveFilePath])
+
+  const moveFile = (file: File) => {
+    setMovingFile(file)
+    setMoveFilePath('/')
+    setMoveTo('')
+    setMoveFileVisable(true)
+    getDestinations()
+  }
+
+  useEffect(() => {
+    if (moveFilePath.startsWith('//')) setMoveFilePath(moveFilePath.slice(1))
+    else getDestinations()
+  }, [moveFilePath, getDestinations])
+
+  const changeMoveTo = (destination: string) => {
+    if (destination === '/') {
+      if(moveTo !== '/') setMoveTo('/')
+    }
+    else setMoveTo(moveFilePath === '/' ? `${moveFilePath}${destination}` : `${moveFilePath}/${destination}`)
+  }
+
+  const changeMoveFilePath = (destination: string) => {
+    if (destination !== '/') setMoveFilePath(moveFilePath + '/' + destination)
+  }
+
+  const goBack = () => {
+    setMoveFilePath(moveFilePath.lastIndexOf('/') === 0 ? '/' : moveFilePath.slice(0, moveFilePath.lastIndexOf('/')))
+  }
+
+  const move = () => {
+    if (movingFile) {
+      axios.post("/files/move", {
+        name: movingFile.name,
+        user: username,
+        path: movingFile.path,
+        newPath: moveTo
+      }).then(res => {
+        getFiles()
+        setMoveFileVisable(false)
+      })
+    } else {
+      message.error('move file error')
+    }
+  }
+
+  // create folder modal
   const showModal = () => {
     setVisible(true)
   }
@@ -217,7 +288,8 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
         path: path.length > 1 ? path.join('/').slice(1) : path.join()
       }).then(res => {
         message.success(`folder ${folderName} created successfully.`)
-        setSelectType('all')
+        if (selectType !== 'all') select('all')
+        else getFiles()
       })
       hideModal()
     } else {
@@ -259,6 +331,43 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
         >
           <p>Folder Name:</p>
           <Input onChange={e => setFolderName(e.target.value)} onPressEnter={e => {e.preventDefault(); createFolder();}} />
+        </Modal>
+        <Modal
+          title={'Move To ' + moveTo}
+          visible={moveFileVisable}
+          onOk={move}
+          onCancel={() => {setMoveFileVisable(false); setMoveTo('');} }
+          okText="Confirm"
+          cancelText="Cancel"
+          closable={false}
+          width={260}
+        >
+          <ul>
+            { moveFilePath === '/' ? <></> :
+              <li className="destination-container" style={{ height: '38px' }} onClick={goBack}>
+                <Icon type="arrow-up" style={{ fontSize: '1.3rem', marginRight: '1rem' }} />
+                <span>..</span>
+              </li>
+            }
+            { destinations.map((destination, index) => (
+                <li 
+                  key={index}
+                  onClick={() => changeMoveTo(destination)}
+                  className={ moveTo === (moveFilePath === '/' ? `${moveFilePath}${destination}` : `${moveFilePath}/${destination}`)  ? 'destination-container selected-destination' : 'destination-container' }>
+                  <svg className="folder-icon" focusable="false" viewBox="0 0 24 24" aria-hidden="true" role="presentation"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"></path><path fill="none" d="M0 0h24v24H0z"></path></svg>
+                  <span>{ destination }</span>
+                  <Button type="link" shape="circle" icon="right" onClick={(e: React.MouseEvent) => {e.stopPropagation();changeMoveFilePath(destination)}} />
+                </li>
+              ))
+            }
+          </ul>
+          {/* <div>
+            { moveTo === '' ? <></> :
+              <p style={{ color: 'rgba(0, 0, 0, 0.54)' }}>
+                Move To { moveTo }
+              </p>
+            }
+          </div> */}
         </Modal>
         <div className="sidebar-container">
           <div className="sidebar">
@@ -342,10 +451,26 @@ const Disk: React.FC<RouteComponentProps> = (props) => {
                   <ContextMenu id={file._id}>
                     {
                       file.type === 'folder' ? 
-                      <MenuItem onClick={handleClick} data={{ action: 'Enter' }}>Enter</MenuItem> :
-                      <MenuItem onClick={handleClick} data={{ action: 'Download' }}>Download</MenuItem>
+                      <MenuItem onClick={handleClick} data={{ action: 'Enter' }}>
+                        <Icon type="folder-open" />Enter
+                      </MenuItem> :
+                      <MenuItem onClick={handleClick} data={{ action: 'Download' }}>
+                        <Icon type="cloud-download" />Download
+                      </MenuItem>
                     }
-                    <MenuItem onClick={handleClick} data={{ action: 'Delete' }}>Delete</MenuItem>
+                    <MenuItem onClick={handleClick} data={{ action: 'Rename' }}>
+                      <Icon type="edit" />Rename
+                    </MenuItem>
+                    {
+                      file.type === 'folder' ?
+                      <></> :
+                      <MenuItem onClick={handleClick} data={{ action: 'Move' }}>
+                        <Icon type="export" />Move
+                      </MenuItem>
+                    }
+                    <MenuItem onClick={handleClick} data={{ action: 'Delete' }}>
+                      <Icon type="delete" />Delete
+                    </MenuItem>
                   </ContextMenu>
                 </React.Fragment>
               ))

@@ -6,7 +6,8 @@
 - [x] authorization(jwt)
 - [x] RSA encryption
 - [x] search, classify
+- [x] move file
+- [ ] rename file
 - [ ] show files as list 
-- [ ] move file or folder
 - [ ] OSS
 - [ ] preview file

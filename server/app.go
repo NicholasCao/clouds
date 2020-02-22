@@ -25,6 +25,7 @@ func main() {
 	r.POST("/api/files/folder", file.NewFolder)
 	r.DELETE("/api/files/:id", file.Delete)
 	r.GET("/api/files/download", file.Download)
+	r.POST("/api/files/move", file.Move)
 
 	app.Use(jwt.New(jwt.Options{
 		Secret: config.TokenSecret,

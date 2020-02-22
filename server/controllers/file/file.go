@@ -41,16 +41,25 @@ func Get(c *goa.Context) {
 
 	// search
 	if keyword != "" {
-		search(c, user, path, keyword)
+		search(c, user, keyword)
 		return
 	}
 
 	if fileType != "" && fileType != "all" {
 		result := &[]fileDetail{}
-		err := db.FindAll("file", bson.M{
-			"user": user,
-			"type": fileType,
-		}, nil, result)
+		var err error
+		if path != "" {
+			err = db.FindAll("file", bson.M{
+				"user": user,
+				"type": fileType,
+				"path": path,
+			}, nil, result)
+		} else {
+			err = db.FindAll("file", bson.M{
+				"user": user,
+				"type": fileType,
+			}, nil, result)
+		}
 		if err != nil {
 			c.Status(500)
 			c.JSON(goa.M{
@@ -83,11 +92,10 @@ func Get(c *goa.Context) {
 }
 
 // Search files.
-func search(c *goa.Context, user, path, keyword string) {
+func search(c *goa.Context, user, keyword string) {
 	result := &[]fileDetail{}
 	err := db.FindAll("file", bson.M{
 		"user": user,
-		"path": path,
 		"name": bson.M{
 			"$regex": bson.RegEx{
 				Pattern: keyword,
@@ -233,6 +241,39 @@ func Delete(c *goa.Context) {
 		})
 	} else {
 		err = os.Remove("store/" + getFileName(user, path, name))
+		c.JSON(goa.M{
+			"msg": "success",
+		})
+	}
+}
+
+type movedFile struct {
+	ID      bson.ObjectId `json:"_id,omitempty" bson:"_id,omitempty"`
+	User    string        `json:"user" bson:"user"`
+	Path    string        `json:"path" bson:"path"`
+	NewPath string        `json:"newPath" bson:"path"`
+	Name    string        `json:"name" bson:"name"`
+}
+
+// Move a file.
+func Move(c *goa.Context) {
+	file := &movedFile{}
+	c.ParseJSON(file)
+	err := db.UpdateAll("file", bson.M{
+		"user": file.User,
+		"path": file.Path,
+		"name": file.Name,
+	}, bson.M{
+		"$set": bson.M{
+			"path": file.NewPath,
+		},
+	})
+	if err != nil {
+		c.Status(500)
+		c.JSON(goa.M{
+			"msg": "move file failed: " + err.Error(),
+		})
+	} else {
 		c.JSON(goa.M{
 			"msg": "success",
 		})

@@ -154,6 +154,48 @@
   margin-bottom: 0;
 }
 
+.destination-container {
+  display: flex;
+  align-items: center;
+  margin-left: -24px;
+  margin-right: -24px;
+  padding: 3px 24px;
+  font-size: 1rem;
+}
+
+.destination-container .folder-icon {
+  font-size: 1.3rem;
+  margin-right: 1rem;
+}
+
+.destination-container:hover {
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.destination-container button {
+  font-size: .8rem;
+  margin-left: auto;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.destination-container button:hover {
+  color: rgba(0, 0, 0, 0.54);
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.selected-destination {
+  background-color: #3f51b5 !important;
+  color: #fff;
+}
+
+.selected-destination button {
+  color: #fff;
+}
+
+.selected-destination svg {
+  color: #fff;
+}
 
 .ant-popover-inner-content {
   padding: 0;
@@ -172,7 +214,7 @@
 .react-contextmenu {
   background-color: #fff;
   background-clip: padding-box;
-  border: 1px solid rgba(0,0,0,.15);
+  /* border: 1px solid rgba(0,0,0,.15); */
   border-radius: .25rem;
   color: #373a3c;
   font-size: 16px;
@@ -184,6 +226,7 @@
   pointer-events: none;
   text-align: left;
   transition: opacity 250ms ease !important;
+  box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 2px 14px 2px rgba(0, 0, 0, 0.12);
 }
 
 .react-contextmenu.react-contextmenu--visible {
@@ -199,7 +242,7 @@
   cursor: pointer;
   font-weight: 400;
   line-height: 1.5;
-  padding: 3px 20px;
+  padding: 5px 15px;
   text-align: inherit;
   white-space: nowrap;
 }
@@ -210,4 +253,8 @@
   background-color: rgba(0, 0, 0, 0.08);
   border-color: rgba(0, 0, 0, 0.08);
   text-decoration: none;
+}
+
+.react-contextmenu-item > i {
+  margin-right: 5px;
 }

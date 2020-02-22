@@ -8,6 +8,15 @@
   overflow: hidden;
   background-color: #fff;
   margin: 7px 12px;
+  cursor: pointer;
+}
+
+.file-container:hover {
+  border: 1px solid #d0d0d0;
+}
+
+.file-container:hover .file-name {
+  background-color: #f9f9f9;
 }
 
 .file-container .picture {
